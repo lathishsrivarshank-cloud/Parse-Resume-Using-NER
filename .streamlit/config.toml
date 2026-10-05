@@ -5,6 +5,3 @@ showErrorDetails = true
 maxUploadSize = 200
 enableXsrfProtection = true
 headless = true
-
-[logger]
-level = "info"

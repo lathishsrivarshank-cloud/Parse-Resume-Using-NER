@@ -10,7 +10,9 @@ from ner_parser import parse_resume
 st.set_page_config(page_title="Resume Parser using NER", page_icon="📄", layout="wide")
 
 st.title("📄 Resume Parser using NER")
-st.write("Upload a resume image or PDF. The system performs OCR, preprocessing, and Named Entity Recognition (NER), then extracts structured information.")
+st.write(
+    "Upload a resume image or PDF. The system performs OCR, preprocessing, and Named Entity Recognition (NER), then extracts structured information."
+)
 
 with st.sidebar:
     st.header("Pipeline")
@@ -20,12 +22,11 @@ with st.sidebar:
     st.write("4. spaCy NER")
     st.write("5. Regex + keyword rules")
     st.write("6. Structured JSON output")
-    st.info("For scanned documents, Tesseract OCR must be installed on Windows.")
+    st.info("For scanned documents, Tesseract OCR must be installed.")
 
 uploaded = st.file_uploader("Upload resume", type=["pdf", "png", "jpg", "jpeg"])
 
 if uploaded:
-    suffix = Path(uploaded.name).suffix.lower()
     temp_dir = Path("temp_uploads")
     temp_dir.mkdir(exist_ok=True)
     temp_path = temp_dir / uploaded.name
@@ -45,10 +46,7 @@ if uploaded:
 
         with c2:
             st.subheader("Structured Information")
-            display = {}
-            for key, value in data.items():
-                display[key] = value
-            st.json(display)
+            st.json(data)
 
         st.subheader("Named Entities")
         if data["entities"]:

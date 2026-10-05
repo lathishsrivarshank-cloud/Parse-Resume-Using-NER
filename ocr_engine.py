@@ -5,9 +5,7 @@ import tempfile
 import cv2
 import numpy as np
 import pytesseract
-from PIL import Image
 import fitz
-
 
 def preprocess_image(image_bgr):
     """Improve document readability before OCR."""
@@ -16,16 +14,21 @@ def preprocess_image(image_bgr):
     denoised = cv2.GaussianBlur(gray, (3, 3), 0)
     threshold = cv2.adaptiveThreshold(
         denoised, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-        cv2.THRESH_BINARY, 31, 11
+        cv2.THRESH_BINARY, 31, 11,
     )
     return threshold
 
-
 def ocr_bgr(image_bgr):
     processed = preprocess_image(image_bgr)
-    text = pytesseract.image_to_string(processed, config="--psm 6")
+    try:
+        pytesseract.get_tesseract_version()
+        text = pytesseract.image_to_string(processed, config="--psm 6")
+    except pytesseract.TesseractNotFoundError:
+        raise RuntimeError(
+            "Tesseract OCR is not installed or not in PATH. "
+            "On Streamlit Cloud, ensure packages.txt includes tesseract-ocr and libtesseract0."
+        )
     return text, processed
-
 
 def extract_text_from_file(path: Path):
     """
@@ -35,13 +38,14 @@ def extract_text_from_file(path: Path):
     """
     debug_dir = Path(tempfile.mkdtemp(prefix="resume_ocr_"))
     debug_images = []
+
     suffix = path.suffix.lower()
 
     if suffix == ".pdf":
         pdf = fitz.open(path)
         texts = []
+
         for i, page in enumerate(pdf):
-            # Try embedded/selectable PDF text first.
             text = page.get_text("text").strip()
             if len(re.sub(r"\s+", "", text)) >= 30:
                 texts.append(text)
@@ -59,6 +63,7 @@ def extract_text_from_file(path: Path):
             cv2.imwrite(str(out), processed)
             debug_images.append(out)
             texts.append(ocr_text)
+
         pdf.close()
         return "\n\n".join(texts), debug_images
 
