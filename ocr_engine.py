@@ -1,11 +1,16 @@
 from pathlib import Path
 import re
+import shutil
 import tempfile
 
 import cv2
 import numpy as np
 import pytesseract
 import fitz
+
+# Ensure Tesseract is discoverable on Streamlit Cloud.
+if shutil.which("tesseract"):
+    pytesseract.pytesseract.tesseract_cmd = shutil.which("tesseract")
 
 def preprocess_image(image_bgr):
     """Improve document readability before OCR."""
@@ -23,22 +28,16 @@ def ocr_bgr(image_bgr):
     try:
         pytesseract.get_tesseract_version()
         text = pytesseract.image_to_string(processed, config="--psm 6")
-    except pytesseract.TesseractNotFoundError:
+    except Exception as exc:
         raise RuntimeError(
             "Tesseract OCR is not installed or not in PATH. "
-            "On Streamlit Cloud, ensure packages.txt includes tesseract-ocr and libtesseract0."
-        )
+            "On Streamlit Cloud, ensure packages.txt includes tesseract-ocr."
+        ) from exc
     return text, processed
 
 def extract_text_from_file(path: Path):
-    """
-    Returns:
-        combined_text: extracted text
-        debug_images: paths to temporary preprocessing images
-    """
     debug_dir = Path(tempfile.mkdtemp(prefix="resume_ocr_"))
     debug_images = []
-
     suffix = path.suffix.lower()
 
     if suffix == ".pdf":

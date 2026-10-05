@@ -13,7 +13,7 @@ def get_nlp():
     except OSError as exc:
         raise RuntimeError(
             "spaCy English model 'en_core_web_sm' is missing or failed to load. "
-            "Install it with the package dependency in requirements.txt."
+            "Install the model and redeploy."
         ) from exc
 
     return _nlp
